@@ -41,3 +41,23 @@ class Site(TimeStampedModel):
 
     def __str__(self):
         return f"{self.customer.name} - {self.name}"
+
+class SpeedTestResult(TimeStampedModel):
+    site = models.ForeignKey(
+        Site,
+        on_delete=models.CASCADE,
+        related_name="speed_tests",
+    )
+    isp = models.CharField(max_length=100)
+    download_mbps = models.DecimalField(max_digits=8, decimal_places=2)
+    upload_mbps = models.DecimalField(max_digits=8, decimal_places=2)
+    ping_ms = models.DecimalField(max_digits=8, decimal_places=2)
+    jitter_ms = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True)
+    test_datetime = models.DateTimeField()
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-test_datetime"]
+
+    def __str__(self):
+        return f"{self.site} - {self.download_mbps} Mbps down"

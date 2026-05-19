@@ -17,6 +17,7 @@
         {% if user.is_authenticated %}
             <a class="nav-link text-light" href="{% url 'core:customer_list' %}">Customers</a>
             <a class="nav-link text-light" href="{% url 'core:site_list' %}">Sites</a>
+            <a class="nav-link text-light" href="{% url 'core:speedtest_list' %}">Speed Tests</a>
         {% endif %}
 
         <div class="ms-auto">

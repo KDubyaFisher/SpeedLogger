@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Speed Test Detail | SpeedLogger{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3">Speed Test Detail</h1>
+    <div>
+        <a href="{% url 'core:speedtest_update' speed_test.pk %}" class="btn btn-primary">Edit</a>
+        <a href="{% url 'core:speedtest_list' %}" class="btn btn-outline-secondary">Back</a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <p><strong>Customer:</strong> {{ speed_test.site.customer.name }}</p>
+        <p><strong>Site:</strong> {{ speed_test.site.name }}</p>
+        <p><strong>ISP:</strong> {{ speed_test.isp }}</p>
+        <p><strong>Download:</strong> {{ speed_test.download_mbps }} Mbps</p>
+        <p><strong>Upload:</strong> {{ speed_test.upload_mbps }} Mbps</p>
+        <p><strong>Ping:</strong> {{ speed_test.ping_ms }} ms</p>
+        <p><strong>Jitter:</strong> {{ speed_test.jitter_ms|default:"—" }} ms</p>
+        <p><strong>Test Date:</strong> {{ speed_test.test_datetime }}</p>
+        <p><strong>Notes:</strong></p>
+        <p>{{ speed_test.notes|linebreaksbr|default:"—" }}</p>
+    </div>
+</div>
+{% endblock %}

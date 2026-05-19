@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Speed Tests | SpeedLogger{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3">Speed Tests</h1>
+    <a href="{% url 'core:speedtest_create' %}" class="btn btn-primary">Add Speed Test</a>
+</div>
+
+{% if speed_tests %}
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Site</th>
+                <th>ISP</th>
+                <th>Download</th>
+                <th>Upload</th>
+                <th>Ping</th>
+                <th>Test Date</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for speed_test in speed_tests %}
+                <tr>
+                    <td>{{ speed_test.site.customer.name }}</td>
+                    <td>{{ speed_test.site.name }}</td>
+                    <td>{{ speed_test.isp }}</td>
+                    <td>{{ speed_test.download_mbps }} Mbps</td>
+                    <td>{{ speed_test.upload_mbps }} Mbps</td>
+                    <td>{{ speed_test.ping_ms }} ms</td>
+                    <td>{{ speed_test.test_datetime }}</td>
+                    <td class="text-end">
+                        <a href="{% url 'core:speedtest_detail' speed_test.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+                        <a href="{% url 'core:speedtest_update' speed_test.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <a href="{% url 'core:speedtest_delete' speed_test.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        No speed test records have been added yet.
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Customer, Site
+from .models import Customer, Site, SpeedTestResult
 
 class CustomerForm(forms.ModelForm):
     class Meta:
@@ -41,3 +41,36 @@ class SiteForm(forms.ModelForm):
             "zip_code": forms.TextInput(attrs={"class": "form-control"}),
             "notes": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
         }
+
+class SpeedTestResultForm(forms.ModelForm):
+    class Meta:
+        model = SpeedTestResult
+        fields = [
+            "site",
+            "isp",
+            "download_mbps",
+            "upload_mbps",
+            "ping_ms",
+            "jitter_ms",
+            "test_datetime",
+            "notes",
+        ]
+        widgets = {
+            "site": forms.Select(attrs={"class": "form-select"}),
+            "isp": forms.TextInput(attrs={"class": "form-control"}),
+            "download_mbps": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": "0"}),
+            "upload_mbps": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": "0"}),
+            "ping_ms": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": "0"}),
+            "jitter_ms": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": "0"}),
+            "test_datetime": forms.DateTimeInput(
+                attrs={"class": "form-control", "type": "datetime-local"},
+                format="%Y-%m-%dT%H:%M",
+            ),
+            "notes": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.instance and self.instance.test_datetime:
+            self.initial["test_datetime"] = self.instance.test_datetime.strftime("%Y-%m-%dT%H:%M")

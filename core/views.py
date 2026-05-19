@@ -4,8 +4,8 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from .forms import CustomerForm, SiteForm
-from .models import Customer, Site
+from .forms import CustomerForm, SiteForm, SpeedTestResultForm
+from .models import Customer, Site, SpeedTestResult
 
 @login_required
 def home(request):
@@ -73,3 +73,34 @@ class SiteDeleteView(LoginRequiredMixin, DeleteView):
     model = Site
     template_name = "core/site_confirm_delete.html"
     success_url = reverse_lazy("core:site_list")
+
+class SpeedTestResultListView(LoginRequiredMixin, ListView):
+    model = SpeedTestResult
+    template_name = "core/speedtest_list.html"
+    context_object_name = "speed_tests"
+
+
+class SpeedTestResultDetailView(LoginRequiredMixin, DetailView):
+    model = SpeedTestResult
+    template_name = "core/speedtest_detail.html"
+    context_object_name = "speed_test"
+
+
+class SpeedTestResultCreateView(LoginRequiredMixin, CreateView):
+    model = SpeedTestResult
+    form_class = SpeedTestResultForm
+    template_name = "core/speedtest_form.html"
+    success_url = reverse_lazy("core:speedtest_list")
+
+
+class SpeedTestResultUpdateView(LoginRequiredMixin, UpdateView):
+    model = SpeedTestResult
+    form_class = SpeedTestResultForm
+    template_name = "core/speedtest_form.html"
+    success_url = reverse_lazy("core:speedtest_list")
+
+
+class SpeedTestResultDeleteView(LoginRequiredMixin, DeleteView):
+    model = SpeedTestResult
+    template_name = "core/speedtest_confirm_delete.html"
+    success_url = reverse_lazy("core:speedtest_list")

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Form | SpeedLogger{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Customer</h1>
+
+<form method="post" class="card card-body">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+    {% endif %}
+
+    {% for field in form %}
+        <div class="mb-3">
+            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+            {{ field }}
+
+            {% if field.errors %}
+                <div class="text-danger small">{{ field.errors }}</div>
+            {% endif %}
+        </div>
+    {% endfor %}
+
+    <div>
+        <button type="submit" class="btn btn-primary">Save</button>
+        <a href="{% url 'core:customer_list' %}" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}

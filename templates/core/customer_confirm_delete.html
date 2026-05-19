@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Customer | SpeedLogger{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Delete Customer</h1>
+
+<div class="alert alert-warning">
+    Are you sure you want to delete "{{ object }}"?
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a href="{% url 'core:customer_list' %}" class="btn btn-outline-secondary">Cancel</a>
+</form>
+{% endblock %}

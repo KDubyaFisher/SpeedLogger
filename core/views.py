@@ -4,9 +4,8 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from .forms import CustomerForm
-from .models import Customer
-
+from .forms import CustomerForm, SiteForm
+from .models import Customer, Site
 
 @login_required
 def home(request):
@@ -43,3 +42,34 @@ class CustomerDeleteView(LoginRequiredMixin, DeleteView):
     model = Customer
     template_name = "core/customer_confirm_delete.html"
     success_url = reverse_lazy("core:customer_list")
+
+class SiteListView(LoginRequiredMixin, ListView):
+    model = Site
+    template_name = "core/site_list.html"
+    context_object_name = "sites"
+
+
+class SiteDetailView(LoginRequiredMixin, DetailView):
+    model = Site
+    template_name = "core/site_detail.html"
+    context_object_name = "site"
+
+
+class SiteCreateView(LoginRequiredMixin, CreateView):
+    model = Site
+    form_class = SiteForm
+    template_name = "core/site_form.html"
+    success_url = reverse_lazy("core:site_list")
+
+
+class SiteUpdateView(LoginRequiredMixin, UpdateView):
+    model = Site
+    form_class = SiteForm
+    template_name = "core/site_form.html"
+    success_url = reverse_lazy("core:site_list")
+
+
+class SiteDeleteView(LoginRequiredMixin, DeleteView):
+    model = Site
+    template_name = "core/site_confirm_delete.html"
+    success_url = reverse_lazy("core:site_list")

@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import ValidationError
 
 from .models import Customer, Site, SpeedTestResult
 
@@ -19,6 +20,14 @@ class CustomerForm(forms.ModelForm):
             "phone": forms.TextInput(attrs={"class": "form-control"}),
             "notes": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
         }
+
+        def clean_name(self):
+            name = self.cleaned_data["name"].strip()
+
+            if not name:
+                raise ValidationError("Customer name is required.")
+
+            return name
 
 class SiteForm(forms.ModelForm):
     class Meta:
@@ -41,6 +50,14 @@ class SiteForm(forms.ModelForm):
             "zip_code": forms.TextInput(attrs={"class": "form-control"}),
             "notes": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
         }
+
+        def clean_name(self):
+            name = self.cleaned_data["name"].strip()
+
+            if not name:
+                raise ValidationError("Site name is required.")
+
+            return name
 
 class SpeedTestResultForm(forms.ModelForm):
     class Meta:
@@ -74,3 +91,29 @@ class SpeedTestResultForm(forms.ModelForm):
 
         if self.instance and self.instance.test_datetime:
             self.initial["test_datetime"] = self.instance.test_datetime.strftime("%Y-%m-%dT%H:%M")
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        download_mbps = cleaned_data.get("download_mbps")
+        upload_mbps = cleaned_data.get("upload_mbps")
+        ping_ms = cleaned_data.get("ping_ms")
+        jitter_ms = cleaned_data.get("jitter_ms")
+        isp = cleaned_data.get("isp")
+
+        if isp:
+            cleaned_data["isp"] = isp.strip()
+
+        if download_mbps is not None and download_mbps < 0:
+            self.add_error("download_mbps", "Download speed cannot be negative.")
+
+        if upload_mbps is not None and upload_mbps < 0:
+            self.add_error("upload_mbps", "Upload speed cannot be negative.")
+
+        if ping_ms is not None and ping_ms < 0:
+            self.add_error("ping_ms", "Ping cannot be negative.")
+
+        if jitter_ms is not None and jitter_ms < 0:
+            self.add_error("jitter_ms", "Jitter cannot be negative.")
+
+        return cleaned_data

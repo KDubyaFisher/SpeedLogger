@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from .forms import CustomerForm, SiteForm, SpeedTestResultForm
 from .models import Customer, Site, SpeedTestResult
+from .reports import SpeedTestReportGenerator
 
 @login_required
 def home(request):
@@ -158,8 +159,14 @@ class SpeedTestReportView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["generated_at"] = timezone.now()
+
+        report = SpeedTestReportGenerator(self.object_list)
+
+        context["report_title"] = report.get_title()
+        context["report_columns"] = report.get_columns()
+        context["generated_at"] = report.generated_at
         context["customer_query"] = self.request.GET.get("customer", "").strip()
         context["site_query"] = self.request.GET.get("site", "").strip()
         context["isp_query"] = self.request.GET.get("isp", "").strip()
+
         return context

@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from django.db.models import Q
+from django.utils import timezone
 
 from .forms import CustomerForm, SiteForm, SpeedTestResultForm
 from .models import Customer, Site, SpeedTestResult
@@ -130,4 +131,35 @@ class SpeedTestSearchView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["query"] = self.request.GET.get("q", "").strip()
+        return context
+
+class SpeedTestReportView(LoginRequiredMixin, ListView):
+    model = SpeedTestResult
+    template_name = "core/speedtest_report.html"
+    context_object_name = "speed_tests"
+
+    def get_queryset(self):
+        queryset = SpeedTestResult.objects.select_related("site", "site__customer")
+
+        customer = self.request.GET.get("customer", "").strip()
+        site = self.request.GET.get("site", "").strip()
+        isp = self.request.GET.get("isp", "").strip()
+
+        if customer:
+            queryset = queryset.filter(site__customer__name__icontains=customer)
+
+        if site:
+            queryset = queryset.filter(site__name__icontains=site)
+
+        if isp:
+            queryset = queryset.filter(isp__icontains=isp)
+
+        return queryset.order_by("-test_datetime")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["generated_at"] = timezone.now()
+        context["customer_query"] = self.request.GET.get("customer", "").strip()
+        context["site_query"] = self.request.GET.get("site", "").strip()
+        context["isp_query"] = self.request.GET.get("isp", "").strip()
         return context

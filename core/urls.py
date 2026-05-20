@@ -18,6 +18,7 @@ urlpatterns = [
     path("sites/<int:pk>/delete/", views.SiteDeleteView.as_view(), name="site_delete"),
     path("speed-tests/", views.SpeedTestResultListView.as_view(), name="speedtest_list"),
     path("speed-tests/search/", views.SpeedTestSearchView.as_view(), name="speedtest_search"),
+    path("speed-tests/report/", views.SpeedTestReportView.as_view(), name="speedtest_report"),
     path("speed-tests/new/", views.SpeedTestResultCreateView.as_view(), name="speedtest_create"),
     path("speed-tests/<int:pk>/", views.SpeedTestResultDetailView.as_view(), name="speedtest_detail"),
     path("speed-tests/<int:pk>/edit/", views.SpeedTestResultUpdateView.as_view(), name="speedtest_update"),

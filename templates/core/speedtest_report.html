@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Speed Test Report | SpeedLogger{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="h3">Speed Test Report</h1>
+    <p class="text-muted mb-0">
+        Generated: {{ generated_at|date:"F j, Y, g:i A" }}
+    </p>
+</div>
+
+<form method="get" class="card card-body mb-4">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label for="customer" class="form-label">Customer</label>
+            <input
+                type="text"
+                id="customer"
+                name="customer"
+                class="form-control"
+                value="{{ customer_query }}"
+                placeholder="Customer name"
+            >
+        </div>
+
+        <div class="col-md-4">
+            <label for="site" class="form-label">Site</label>
+            <input
+                type="text"
+                id="site"
+                name="site"
+                class="form-control"
+                value="{{ site_query }}"
+                placeholder="Site name"
+            >
+        </div>
+
+        <div class="col-md-4">
+            <label for="isp" class="form-label">ISP</label>
+            <input
+                type="text"
+                id="isp"
+                name="isp"
+                class="form-control"
+                value="{{ isp_query }}"
+                placeholder="Internet service provider"
+            >
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Generate Report</button>
+        <a href="{% url 'core:speedtest_report' %}" class="btn btn-outline-secondary">Clear</a>
+    </div>
+</form>
+
+<div class="card">
+    <div class="card-header">
+        <strong>Report Results</strong>
+    </div>
+
+    <div class="card-body">
+        {% if speed_tests %}
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Site</th>
+                        <th>ISP</th>
+                        <th>Download Mbps</th>
+                        <th>Upload Mbps</th>
+                        <th>Ping ms</th>
+                        <th>Jitter ms</th>
+                        <th>Test Date</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for speed_test in speed_tests %}
+                        <tr>
+                            <td>{{ speed_test.site.customer.name }}</td>
+                            <td>{{ speed_test.site.name }}</td>
+                            <td>{{ speed_test.isp }}</td>
+                            <td>{{ speed_test.download_mbps }}</td>
+                            <td>{{ speed_test.upload_mbps }}</td>
+                            <td>{{ speed_test.ping_ms }}</td>
+                            <td>{{ speed_test.jitter_ms|default:"—" }}</td>
+                            <td>{{ speed_test.test_datetime|date:"Y-m-d g:i A" }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="text-muted mb-0">
+                Total records included: {{ speed_tests|length }}
+            </p>
+        {% else %}
+            <div class="alert alert-info mb-0">
+                No speed test records are available for this report.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

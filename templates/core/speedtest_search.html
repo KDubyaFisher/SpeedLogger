@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Search Speed Tests | SpeedLogger{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-3">Search Speed Tests</h1>
+
+<form method="get" class="card card-body mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-10">
+            <label for="q" class="form-label">Search by customer, site, ISP, notes, or date</label>
+            <input
+                type="text"
+                id="q"
+                name="q"
+                class="form-control"
+                value="{{ query }}"
+                placeholder="Example: Spectrum, Austin, client name, or 2026"
+            >
+        </div>
+
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+        </div>
+    </div>
+</form>
+
+{% if query %}
+    <p class="text-muted">
+        Search results for "{{ query }}".
+    </p>
+{% endif %}
+
+{% if speed_tests %}
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Site</th>
+                <th>ISP</th>
+                <th>Download</th>
+                <th>Upload</th>
+                <th>Ping</th>
+                <th>Jitter</th>
+                <th>Test Date</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for speed_test in speed_tests %}
+                <tr>
+                    <td>{{ speed_test.site.customer.name }}</td>
+                    <td>{{ speed_test.site.name }}</td>
+                    <td>{{ speed_test.isp }}</td>
+                    <td>{{ speed_test.download_mbps }} Mbps</td>
+                    <td>{{ speed_test.upload_mbps }} Mbps</td>
+                    <td>{{ speed_test.ping_ms }} ms</td>
+                    <td>{{ speed_test.jitter_ms|default:"—" }} ms</td>
+                    <td>{{ speed_test.test_datetime }}</td>
+                    <td class="text-end">
+                        <a href="{% url 'core:speedtest_detail' speed_test.pk %}" class="btn btn-sm btn-outline-secondary">View</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    {% if query %}
+        <div class="alert alert-warning">
+            No speed test records matched your search.
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            Enter a search term to find speed test records.
+        </div>
+    {% endif %}
+{% endif %}
+{% endblock %}

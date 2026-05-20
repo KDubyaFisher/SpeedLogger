@@ -3,6 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.db.models import Q
 
 from .forms import CustomerForm, SiteForm, SpeedTestResultForm
 from .models import Customer, Site, SpeedTestResult
@@ -104,3 +105,29 @@ class SpeedTestResultDeleteView(LoginRequiredMixin, DeleteView):
     model = SpeedTestResult
     template_name = "core/speedtest_confirm_delete.html"
     success_url = reverse_lazy("core:speedtest_list")
+
+class SpeedTestSearchView(LoginRequiredMixin, ListView):
+    model = SpeedTestResult
+    template_name = "core/speedtest_search.html"
+    context_object_name = "speed_tests"
+
+    def get_queryset(self):
+        queryset = SpeedTestResult.objects.select_related("site", "site__customer")
+
+        query = self.request.GET.get("q", "").strip()
+
+        if query:
+            queryset = queryset.filter(
+                Q(site__customer__name__icontains=query)
+                | Q(site__name__icontains=query)
+                | Q(isp__icontains=query)
+                | Q(notes__icontains=query)
+                | Q(test_datetime__icontains=query)
+            )
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["query"] = self.request.GET.get("q", "").strip()
+        return context

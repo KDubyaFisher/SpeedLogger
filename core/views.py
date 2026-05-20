@@ -5,6 +5,7 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from django.db.models import Q
 from django.utils import timezone
+from django.contrib import messages
 
 from .forms import CustomerForm, SiteForm, SpeedTestResultForm
 from .models import Customer, Site, SpeedTestResult
@@ -33,6 +34,10 @@ class CustomerCreateView(LoginRequiredMixin, CreateView):
     template_name = "core/customer_form.html"
     success_url = reverse_lazy("core:customer_list")
 
+    def form_valid(self, form):
+        messages.success(self.request, "Customer created successfully.")
+        return super().form_valid(form)
+
 
 class CustomerUpdateView(LoginRequiredMixin, UpdateView):
     model = Customer
@@ -40,11 +45,19 @@ class CustomerUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "core/customer_form.html"
     success_url = reverse_lazy("core:customer_list")
 
+    def form_valid(self, form):
+        messages.success(self.request, "Customer updated successfully.")
+        return super().form_valid(form)
+
 
 class CustomerDeleteView(LoginRequiredMixin, DeleteView):
     model = Customer
     template_name = "core/customer_confirm_delete.html"
     success_url = reverse_lazy("core:customer_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Customer deleted successfully.")
+        return super().form_valid(form)
 
 class SiteListView(LoginRequiredMixin, ListView):
     model = Site
@@ -64,6 +77,10 @@ class SiteCreateView(LoginRequiredMixin, CreateView):
     template_name = "core/site_form.html"
     success_url = reverse_lazy("core:site_list")
 
+    def form_valid(self, form):
+        messages.success(self.request, "Site created successfully.")
+        return super().form_valid(form)
+
 
 class SiteUpdateView(LoginRequiredMixin, UpdateView):
     model = Site
@@ -71,11 +88,19 @@ class SiteUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "core/site_form.html"
     success_url = reverse_lazy("core:site_list")
 
+    def form_valid(self, form):
+        messages.success(self.request, "Site updated successfully.")
+        return super().form_valid(form)
+
 
 class SiteDeleteView(LoginRequiredMixin, DeleteView):
     model = Site
     template_name = "core/site_confirm_delete.html"
     success_url = reverse_lazy("core:site_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Site deleted successfully.")
+        return super().form_valid(form)
 
 class SpeedTestResultListView(LoginRequiredMixin, ListView):
     model = SpeedTestResult
@@ -95,6 +120,10 @@ class SpeedTestResultCreateView(LoginRequiredMixin, CreateView):
     template_name = "core/speedtest_form.html"
     success_url = reverse_lazy("core:speedtest_list")
 
+    def form_valid(self, form):
+        messages.success(self.request, "Speed test record created successfully.")
+        return super().form_valid(form)
+
 
 class SpeedTestResultUpdateView(LoginRequiredMixin, UpdateView):
     model = SpeedTestResult
@@ -102,11 +131,19 @@ class SpeedTestResultUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "core/speedtest_form.html"
     success_url = reverse_lazy("core:speedtest_list")
 
+    def form_valid(self, form):
+        messages.success(self.request, "Speed test record updated successfully.")
+        return super().form_valid(form)
+
 
 class SpeedTestResultDeleteView(LoginRequiredMixin, DeleteView):
     model = SpeedTestResult
     template_name = "core/speedtest_confirm_delete.html"
     success_url = reverse_lazy("core:speedtest_list")
+
+    def form_valid(self, form):
+        messages.success(self.request, "Speed test record deleted successfully.")
+        return super().form_valid(form)
 
 class SpeedTestSearchView(LoginRequiredMixin, ListView):
     model = SpeedTestResult

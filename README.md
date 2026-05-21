@@ -1,29 +1,136 @@
-<strong>**DO NOT DISTRIBUTE OR PUBLICLY POST SOLUTIONS TO THESE LABS. MAKE ALL FORKS OF THIS REPOSITORY WITH SOLUTION CODE PRIVATE. PLEASE REFER TO THE STUDENT CODE OF CONDUCT AND ETHICAL EXPECTATIONS FOR COLLEGE OF INFORMATION TECHNOLOGY STUDENTS FOR SPECIFICS. **</strong>
+# SpeedLogger
 
-# WESTERN GOVERNORS UNIVERSITY 
-## D424 – SOFTWARE ENGINEERING CAPSTONE
-Welcome to Software Engineering Capstone! This is an opportunity for students to develop full stack software engineering documentation and applications. They will execute documentation, unit testing, revision of software applications, and deploy software applications with scripts and containers on a cloud platform.
+SpeedLogger is a full-stack Django web application for documenting, searching, and reporting internet speed test results across customers and sites.
 
-FOR SPECIFIC TASK INSTRUCTIONS AND REQUIREMENTS FOR THIS ASSESSMENT, PLEASE REFER TO THE COURSE PAGE.
-BASIC INSTRUCTIONS
-For this assessment, you will deploy your developed full stack software product to a web service of your choice.
+## Project Purpose
 
+SpeedLogger is designed for managed service providers, network technicians, and IT administrators who need a centralized system for storing historical internet performance test results. The application allows authenticated users to manage customers, sites, and speed test records through a browser-based interface.
 
-## SUPPLEMENTAL RESOURCES  
-1.	How to clone a project to IntelliJ using Git?
+## Technology Stack
 
-> Ensure that you have Git installed on your system and that IntelliJ is installed using [Toolbox](https://www.jetbrains.com/toolbox-app/). Make sure that you are using version 2022.3.2. Once this has been confirmed, click the clone button and use the 'IntelliJ IDEA (HTTPS)' button. This will open IntelliJ with a prompt to clone the proejct. Save it in a safe location for the directory and press clone. IntelliJ will prompt you for your credentials. Enter in your WGU Credentials and the project will be cloned onto your local machine.  
+SpeedLogger uses Python, Django, PostgreSQL-compatible database configuration, Bootstrap, Docker, GitLab, and Gunicorn.
 
-2. How to create a branch and start Development?
+## Core Features
 
-- GitLab method
-> Press the '+' button located near your branch name. In the dropdown list, press the 'New branch' button. This will allow you to create a name for your branch. Once the branch has been named, you can select 'Create Branch' to push the branch to your repository.
+SpeedLogger includes authenticated user access, customer management, site management, speed test record management, search functionality, timestamped report generation, form validation, and a responsive web interface.
 
-- IntelliJ method
-> In IntelliJ, Go to the 'Git' button on the top toolbar. Select the new branch option and create a name for the branch. Make sure checkout branch is selected and press create. You can now add a commit message and push the new branch to the local repo.
+## Local Development Setup
 
-## SUPPORT
-If you need additional support, please navigate to the course page and reach out to your course instructor.
+Clone the repository.
 
-## FUTURE USE
-Take this opportunity to create or add to a simple resume portfolio to highlight and showcase your work for future use in career search, experience, and education!
+```bash
+git clone <repository-url>
+cd d424-software-engineering-capstone
+```
+
+Create and activate a virtual environment.
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Install dependencies.
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+Apply database migrations.
+
+```bash
+python manage.py migrate
+```
+
+Create a local superuser.
+
+```bash
+python manage.py createsuperuser
+```
+
+Run the development server.
+
+```bash
+python manage.py runserver
+```
+
+Open the application at:
+
+```text
+http://127.0.0.1:8000/
+```
+
+## Docker Setup
+
+Build and run the Docker container.
+
+```bash
+docker compose build
+docker compose up
+```
+
+The Docker configuration runs database migrations, collects static files, and starts the application with Gunicorn.
+
+Open the application at:
+
+```text
+http://127.0.0.1:8000/
+```
+
+Stop the container.
+
+```bash
+docker compose down
+```
+
+## Environment Variables
+
+The application supports environment-based configuration. Use `.env.example` as a reference for required variables.
+
+Important variables include:
+
+```text
+DJANGO_SECRET_KEY
+DJANGO_DEBUG
+DJANGO_ALLOWED_HOSTS
+DJANGO_CSRF_TRUSTED_ORIGINS
+DATABASE_URL
+DJANGO_SUPERUSER_USERNAME
+DJANGO_SUPERUSER_EMAIL
+DJANGO_SUPERUSER_PASSWORD
+```
+
+Do not commit real `.env` files or production secrets.
+
+## Running Tests
+
+Run the Django test suite with:
+
+```bash
+python manage.py test
+```
+
+## Maintenance Notes
+
+A future developer should update dependencies through `requirements.txt`, apply migrations after model changes, run tests before deployment, and verify the application locally before pushing changes to GitLab.
+
+When database models are changed, create and apply migrations.
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+```
+
+Before deployment, run:
+
+```bash
+python manage.py check
+python manage.py test
+```
+
+## Demo Login
+
+For the demonstration environment, evaluator credentials may be created using the Docker environment variables in `docker-compose.yml`.
+
+These credentials are intended only for capstone evaluation and should be changed or removed in a production environment.

@@ -1,0 +1,17 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SECRET_KEY: "dev-only-secret-key"
+      DJANGO_DEBUG: "True"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1"
+      DJANGO_SUPERUSER_USERNAME: "admin"
+      DJANGO_SUPERUSER_EMAIL: "admin@example.com"
+      DJANGO_SUPERUSER_PASSWORD: "SpeedLoggerDemo123!"
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py shell -c \"from django.contrib.auth import get_user_model; import os; User = get_user_model(); username = os.environ.get('DJANGO_SUPERUSER_USERNAME'); email = os.environ.get('DJANGO_SUPERUSER_EMAIL'); password = os.environ.get('DJANGO_SUPERUSER_PASSWORD'); User.objects.filter(username=username).exists() or User.objects.create_superuser(username=username, email=email, password=password)\" &&
+             python manage.py collectstatic --noinput &&
+             gunicorn speedlogger_project.wsgi:application --bind 0.0.0.0:8000"

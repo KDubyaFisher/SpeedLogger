@@ -10,7 +10,14 @@ from .models import Customer, Site, SpeedTestResult
 
 class SpeedTestValidationTests(TestCase):
     def setUp(self):
-        self.customer = Customer.objects.create(name="Test Customer")
+        self.user = User.objects.create_user(
+            username="testuser",
+            password="testpass123",
+        )
+        self.customer = Customer.objects.create(
+            owner=self.user,
+            name="Test Customer",
+        )
         self.site = Site.objects.create(
             customer=self.customer,
             name="Main Office",
@@ -43,7 +50,10 @@ class SpeedTestReportTests(TestCase):
             password="testpass123",
         )
 
-        self.customer = Customer.objects.create(name="Test Customer")
+        self.customer = Customer.objects.create(
+            owner=self.user,
+            name="Test Customer",
+        )
         self.site = Site.objects.create(
             customer=self.customer,
             name="Main Office",

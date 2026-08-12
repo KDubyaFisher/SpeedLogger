@@ -12,15 +12,15 @@ def assign_existing_customers(apps, schema_editor):
     if not customers_without_owner.exists():
         return
 
-    test_user = User.objects.filter(username="WGUTest").first()
+    users = User.objects.all()
 
-    if test_user is None:
+    if users.count() != 1:
         raise RuntimeError(
-            "Cannot assign existing customers because the WGUTest user "
-            "does not exist."
+            "Cannot automatically assign existing customers. "
+            "Expected exactly one existing user."
         )
 
-    customers_without_owner.update(owner=test_user)
+    customers_without_owner.update(owner=users.first())
 
 
 class Migration(migrations.Migration):

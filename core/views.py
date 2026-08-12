@@ -1,3 +1,4 @@
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
@@ -7,13 +8,30 @@ from django.db.models import Q
 from django.utils import timezone
 from django.contrib import messages
 
-from .forms import CustomerForm, SiteForm, SpeedTestResultForm
+from .forms import CustomerForm, SiteForm, SpeedTestResultForm, SignupForm
 from .models import Customer, Site, SpeedTestResult
 from .reports import SpeedTestReportGenerator
 
 @login_required
 def home(request):
     return render(request, "core/home.html")
+
+class SignupView(CreateView):
+    form_class = SignupForm
+    template_name = "registration/signup.html"
+    success_url = reverse_lazy("core:home")
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+
+        login(self.request, self.object)
+
+        messages.success(
+            self.request,
+            "Account created successfully.",
+        )
+
+        return response
 
 class CustomerOwnerQuerysetMixin:
     """

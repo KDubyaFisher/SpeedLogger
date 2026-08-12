@@ -570,3 +570,125 @@ class SpeedTestOwnershipTests(TestCase):
 
         self.assertContains(response, "User A ISP")
         self.assertNotContains(response, "User B ISP")
+
+class SignupTests(TestCase):
+    def test_signup_page_is_available_to_anonymous_users(self):
+        response = self.client.get(reverse("signup"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Create Account")
+
+    def test_valid_signup_creates_user_and_logs_them_in(self):
+        response = self.client.post(
+            reverse("signup"),
+            {
+                "username": "newuser",
+                "email": "newuser@example.com",
+                "password1": "StrongPass123!",
+                "password2": "StrongPass123!",
+            },
+            follow=True,
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("core:home"),
+        )
+
+        user = User.objects.get(username="newuser")
+
+        self.assertEqual(user.email, "newuser@example.com")
+        self.assertTrue(response.context["user"].is_authenticated)
+        self.assertEqual(response.context["user"], user)
+
+    def test_signup_rejects_duplicate_username(self):
+        User.objects.create_user(
+            username="existinguser",
+            password="StrongPass123!",
+        )
+
+        response = self.client.post(
+            reverse("signup"),
+            {
+                "username": "existinguser",
+                "email": "different@example.com",
+                "password1": "StrongPass456!",
+                "password2": "StrongPass456!",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            User.objects.filter(username="existinguser").count(),
+            1,
+        )
+
+    def test_signup_rejects_duplicate_email(self):
+        User.objects.create_user(
+            username="existinguser",
+            email="existing@example.com",
+            password="StrongPass123!",
+        )
+
+        response = self.client.post(
+            reverse("signup"),
+            {
+                "username": "newuser",
+                "email": "EXISTING@example.com",
+                "password1": "StrongPass456!",
+                "password2": "StrongPass456!",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            User.objects.filter(username="newuser").exists()
+        )
+        self.assertContains(
+            response,
+            "An account with this email address already exists.",
+        )
+
+    def test_signup_rejects_mismatched_passwords(self):
+        response = self.client.post(
+            reverse("signup"),
+            {
+                "username": "newuser",
+                "email": "newuser@example.com",
+                "password1": "StrongPass123!",
+                "password2": "DifferentPass123!",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            User.objects.filter(username="newuser").exists()
+        )
+
+    def test_new_user_starts_with_empty_customer_workspace(self):
+        existing_user = User.objects.create_user(
+            username="existinguser",
+            password="StrongPass123!",
+        )
+
+        Customer.objects.create(
+            owner=existing_user,
+            name="Existing Customer",
+        )
+
+        self.client.post(
+            reverse("signup"),
+            {
+                "username": "newuser",
+                "email": "newuser@example.com",
+                "password1": "StrongPass123!",
+                "password2": "StrongPass123!",
+            },
+        )
+
+        response = self.client.get(
+            reverse("core:customer_list")
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Existing Customer")

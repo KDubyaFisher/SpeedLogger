@@ -54,13 +54,7 @@ class CustomerForm(forms.ModelForm):
             "notes": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
         }
 
-        def clean_name(self):
-            name = self.cleaned_data["name"].strip()
 
-            if not name:
-                raise ValidationError("Customer name is required.")
-
-            return name
 
 class SiteForm(forms.ModelForm):
     class Meta:
@@ -91,14 +85,6 @@ class SiteForm(forms.ModelForm):
             self.fields["customer"].queryset = Customer.objects.filter(
                 owner=user
             )
-
-        def clean_name(self):
-            name = self.cleaned_data["name"].strip()
-
-            if not name:
-                raise ValidationError("Site name is required.")
-
-            return name
 
 class SpeedTestResultForm(forms.ModelForm):
     class Meta:

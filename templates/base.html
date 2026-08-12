@@ -61,11 +61,21 @@
                     </form>
                 </div>
             {% else %}
-                <div class="ms-auto">
-                    <a class="btn btn-outline-light btn-sm" href="{% url 'login' %}">
-                        Login
-                    </a>
-                </div>
+            <div class="ms-auto d-flex gap-2">
+                <a
+                        class="btn btn-outline-light btn-sm"
+                        href="{% url 'login' %}"
+                >
+                    Login
+                </a>
+
+                <a
+                        class="btn btn-primary btn-sm"
+                        href="{% url 'signup' %}"
+                >
+                    Sign Up
+                </a>
+            </div>
             {% endif %}
         </div>
     </div>

@@ -23,6 +23,18 @@ class CustomerOwnerQuerysetMixin:
     def get_queryset(self):
         return Customer.objects.filter(owner=self.request.user)
 
+class SiteOwnerQuerysetMixin:
+    def get_queryset(self):
+        return Site.objects.filter(
+            customer__owner=self.request.user
+        )
+
+class SiteFormUserMixin:
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
 class CustomerListView(
     LoginRequiredMixin,
     CustomerOwnerQuerysetMixin,
@@ -89,19 +101,31 @@ class CustomerDeleteView(
         messages.success(self.request, "Customer deleted successfully.")
         return super().form_valid(form)
 
-class SiteListView(LoginRequiredMixin, ListView):
+class SiteListView(
+    LoginRequiredMixin,
+    SiteOwnerQuerysetMixin,
+    ListView,
+):
     model = Site
     template_name = "core/site_list.html"
     context_object_name = "sites"
 
 
-class SiteDetailView(LoginRequiredMixin, DetailView):
+class SiteDetailView(
+    LoginRequiredMixin,
+    SiteOwnerQuerysetMixin,
+    DetailView,
+):
     model = Site
     template_name = "core/site_detail.html"
     context_object_name = "site"
 
 
-class SiteCreateView(LoginRequiredMixin, CreateView):
+class SiteCreateView(
+    LoginRequiredMixin,
+    SiteFormUserMixin,
+    CreateView,
+):
     model = Site
     form_class = SiteForm
     template_name = "core/site_form.html"
@@ -112,7 +136,12 @@ class SiteCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class SiteUpdateView(LoginRequiredMixin, UpdateView):
+class SiteUpdateView(
+    LoginRequiredMixin,
+    SiteOwnerQuerysetMixin,
+    SiteFormUserMixin,
+    UpdateView,
+):
     model = Site
     form_class = SiteForm
     template_name = "core/site_form.html"
@@ -123,7 +152,11 @@ class SiteUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class SiteDeleteView(LoginRequiredMixin, DeleteView):
+class SiteDeleteView(
+    LoginRequiredMixin,
+    SiteOwnerQuerysetMixin,
+    DeleteView,
+):
     model = Site
     template_name = "core/site_confirm_delete.html"
     success_url = reverse_lazy("core:site_list")

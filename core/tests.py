@@ -199,3 +199,146 @@ class CustomerOwnershipTests(TestCase):
                 pk=self.customer_b.pk,
             ).exists()
         )
+
+class SiteOwnershipTests(TestCase):
+    def setUp(self):
+        self.user_a = User.objects.create_user(
+            username="user_a",
+            password="testpass123",
+        )
+        self.user_b = User.objects.create_user(
+            username="user_b",
+            password="testpass123",
+        )
+
+        self.customer_a = Customer.objects.create(
+            owner=self.user_a,
+            name="User A Customer",
+        )
+        self.customer_b = Customer.objects.create(
+            owner=self.user_b,
+            name="User B Customer",
+        )
+
+        self.site_a = Site.objects.create(
+            customer=self.customer_a,
+            name="User A Site",
+        )
+        self.site_b = Site.objects.create(
+            customer=self.customer_b,
+            name="User B Site",
+        )
+
+    def test_site_list_only_shows_logged_in_users_sites(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.get(reverse("core:site_list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "User A Site")
+        self.assertNotContains(response, "User B Site")
+
+    def test_user_cannot_view_another_users_site(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.get(
+            reverse("core:site_detail", args=[self.site_b.pk])
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_user_cannot_update_another_users_site(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.post(
+            reverse("core:site_update", args=[self.site_b.pk]),
+            {
+                "customer": self.customer_b.pk,
+                "name": "Changed Site",
+            },
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+        self.site_b.refresh_from_db()
+        self.assertEqual(self.site_b.name, "User B Site")
+
+    def test_user_cannot_delete_another_users_site(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.post(
+            reverse("core:site_delete", args=[self.site_b.pk])
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(
+            Site.objects.filter(pk=self.site_b.pk).exists()
+        )
+
+    def test_site_form_only_contains_logged_in_users_customers(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.get(reverse("core:site_create"))
+
+        customer_queryset = response.context["form"].fields[
+            "customer"
+        ].queryset
+
+        self.assertIn(self.customer_a, customer_queryset)
+        self.assertNotIn(self.customer_b, customer_queryset)
+
+    def test_user_cannot_create_site_for_another_users_customer(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.post(
+            reverse("core:site_create"),
+            {
+                "customer": self.customer_b.pk,
+                "name": "Unauthorized Site",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            Site.objects.filter(name="Unauthorized Site").exists()
+        )
+
+    def test_user_can_create_site_for_owned_customer(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.post(
+            reverse("core:site_create"),
+            {
+                "customer": self.customer_a.pk,
+                "name": "New Site",
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("core:site_list"),
+        )
+
+        site = Site.objects.get(name="New Site")
+        self.assertEqual(site.customer, self.customer_a)

@@ -15,14 +15,29 @@ from .reports import SpeedTestReportGenerator
 def home(request):
     return render(request, "core/home.html")
 
+class CustomerOwnerQuerysetMixin:
+    """
+    Limit customer queries to records owned by the logged-in user.
+    """
 
-class CustomerListView(LoginRequiredMixin, ListView):
+    def get_queryset(self):
+        return Customer.objects.filter(owner=self.request.user)
+
+class CustomerListView(
+    LoginRequiredMixin,
+    CustomerOwnerQuerysetMixin,
+    ListView,
+):
     model = Customer
     template_name = "core/customer_list.html"
     context_object_name = "customers"
 
 
-class CustomerDetailView(LoginRequiredMixin, DetailView):
+class CustomerDetailView(
+    LoginRequiredMixin,
+    CustomerOwnerQuerysetMixin,
+    DetailView,
+):
     model = Customer
     template_name = "core/customer_detail.html"
     context_object_name = "customer"
@@ -35,11 +50,22 @@ class CustomerCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy("core:customer_list")
 
     def form_valid(self, form):
-        messages.success(self.request, "Customer created successfully.")
+        # Ownership comes from the authenticated session rather than form input.
+        form.instance.owner = self.request.user
+
+        messages.success(
+            self.request,
+            "Customer created successfully.",
+        )
+
         return super().form_valid(form)
 
 
-class CustomerUpdateView(LoginRequiredMixin, UpdateView):
+class CustomerUpdateView(
+    LoginRequiredMixin,
+    CustomerOwnerQuerysetMixin,
+    UpdateView,
+):
     model = Customer
     form_class = CustomerForm
     template_name = "core/customer_form.html"
@@ -50,7 +76,11 @@ class CustomerUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class CustomerDeleteView(LoginRequiredMixin, DeleteView):
+class CustomerDeleteView(
+    LoginRequiredMixin,
+    CustomerOwnerQuerysetMixin,
+    DeleteView,
+):
     model = Customer
     template_name = "core/customer_confirm_delete.html"
     success_url = reverse_lazy("core:customer_list")

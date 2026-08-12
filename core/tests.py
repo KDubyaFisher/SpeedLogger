@@ -80,3 +80,122 @@ class SpeedTestReportTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Speed Test Report")
         self.assertContains(response, "Test ISP")
+
+class CustomerOwnershipTests(TestCase):
+    def setUp(self):
+        # Create two separate users so we can verify that data is isolated
+        # between accounts.
+        self.user_a = User.objects.create_user(
+            username="user_a",
+            password="testpass123",
+        )
+
+        self.user_b = User.objects.create_user(
+            username="user_b",
+            password="testpass123",
+        )
+
+        self.customer_a = Customer.objects.create(
+            owner=self.user_a,
+            name="User A Customer",
+        )
+
+        self.customer_b = Customer.objects.create(
+            owner=self.user_b,
+            name="User B Customer",
+        )
+
+    def test_customer_list_only_shows_logged_in_users_customers(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.get(reverse("core:customer_list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "User A Customer")
+        self.assertNotContains(response, "User B Customer")
+
+    def test_customer_create_assigns_logged_in_user_as_owner(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.post(
+            reverse("core:customer_create"),
+            {
+                "name": "New Customer",
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("core:customer_list"),
+        )
+
+        customer = Customer.objects.get(name="New Customer")
+
+        self.assertEqual(customer.owner, self.user_a)
+
+    def test_user_cannot_view_another_users_customer(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.get(
+            reverse(
+                "core:customer_detail",
+                args=[self.customer_b.pk],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_user_cannot_update_another_users_customer(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.post(
+            reverse(
+                "core:customer_update",
+                args=[self.customer_b.pk],
+            ),
+            {
+                "name": "Changed By User A",
+            },
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+        self.customer_b.refresh_from_db()
+
+        self.assertEqual(
+            self.customer_b.name,
+            "User B Customer",
+        )
+
+    def test_user_cannot_delete_another_users_customer(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.post(
+            reverse(
+                "core:customer_delete",
+                args=[self.customer_b.pk],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+        self.assertTrue(
+            Customer.objects.filter(
+                pk=self.customer_b.pk,
+            ).exists()
+        )

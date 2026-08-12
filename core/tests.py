@@ -342,3 +342,231 @@ class SiteOwnershipTests(TestCase):
 
         site = Site.objects.get(name="New Site")
         self.assertEqual(site.customer, self.customer_a)
+
+class SpeedTestOwnershipTests(TestCase):
+    def setUp(self):
+        self.user_a = User.objects.create_user(
+            username="user_a",
+            password="testpass123",
+        )
+        self.user_b = User.objects.create_user(
+            username="user_b",
+            password="testpass123",
+        )
+
+        self.customer_a = Customer.objects.create(
+            owner=self.user_a,
+            name="User A Customer",
+        )
+        self.customer_b = Customer.objects.create(
+            owner=self.user_b,
+            name="User B Customer",
+        )
+
+        self.site_a = Site.objects.create(
+            customer=self.customer_a,
+            name="User A Site",
+        )
+        self.site_b = Site.objects.create(
+            customer=self.customer_b,
+            name="User B Site",
+        )
+
+        self.speed_test_a = SpeedTestResult.objects.create(
+            site=self.site_a,
+            isp="User A ISP",
+            download_mbps=Decimal("500.00"),
+            upload_mbps=Decimal("50.00"),
+            ping_ms=Decimal("10.00"),
+            jitter_ms=Decimal("2.00"),
+            test_datetime=timezone.now(),
+        )
+
+        self.speed_test_b = SpeedTestResult.objects.create(
+            site=self.site_b,
+            isp="User B ISP",
+            download_mbps=Decimal("300.00"),
+            upload_mbps=Decimal("30.00"),
+            ping_ms=Decimal("20.00"),
+            jitter_ms=Decimal("4.00"),
+            test_datetime=timezone.now(),
+        )
+
+    def test_speed_test_list_only_shows_logged_in_users_records(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.get(reverse("core:speedtest_list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "User A ISP")
+        self.assertNotContains(response, "User B ISP")
+
+    def test_user_cannot_view_another_users_speed_test(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.get(
+            reverse(
+                "core:speedtest_detail",
+                args=[self.speed_test_b.pk],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_user_cannot_update_another_users_speed_test(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.post(
+            reverse(
+                "core:speedtest_update",
+                args=[self.speed_test_b.pk],
+            ),
+            {
+                "site": self.site_b.pk,
+                "isp": "Changed ISP",
+                "download_mbps": "100.00",
+                "upload_mbps": "10.00",
+                "ping_ms": "5.00",
+                "jitter_ms": "1.00",
+                "test_datetime": timezone.now().strftime(
+                    "%Y-%m-%dT%H:%M"
+                ),
+            },
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+        self.speed_test_b.refresh_from_db()
+        self.assertEqual(self.speed_test_b.isp, "User B ISP")
+
+    def test_user_cannot_delete_another_users_speed_test(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.post(
+            reverse(
+                "core:speedtest_delete",
+                args=[self.speed_test_b.pk],
+            )
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue(
+            SpeedTestResult.objects.filter(
+                pk=self.speed_test_b.pk
+            ).exists()
+        )
+
+    def test_speed_test_form_only_contains_logged_in_users_sites(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.get(
+            reverse("core:speedtest_create")
+        )
+
+        site_queryset = response.context["form"].fields[
+            "site"
+        ].queryset
+
+        self.assertIn(self.site_a, site_queryset)
+        self.assertNotIn(self.site_b, site_queryset)
+
+    def test_user_cannot_create_speed_test_for_another_users_site(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.post(
+            reverse("core:speedtest_create"),
+            {
+                "site": self.site_b.pk,
+                "isp": "Unauthorized ISP",
+                "download_mbps": "200.00",
+                "upload_mbps": "20.00",
+                "ping_ms": "15.00",
+                "jitter_ms": "3.00",
+                "test_datetime": timezone.now().strftime(
+                    "%Y-%m-%dT%H:%M"
+                ),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            SpeedTestResult.objects.filter(
+                isp="Unauthorized ISP"
+            ).exists()
+        )
+
+    def test_user_can_create_speed_test_for_owned_site(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.post(
+            reverse("core:speedtest_create"),
+            {
+                "site": self.site_a.pk,
+                "isp": "New ISP",
+                "download_mbps": "600.00",
+                "upload_mbps": "60.00",
+                "ping_ms": "8.00",
+                "jitter_ms": "1.50",
+                "test_datetime": timezone.now().strftime(
+                    "%Y-%m-%dT%H:%M"
+                ),
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("core:speedtest_list"),
+        )
+
+        speed_test = SpeedTestResult.objects.get(
+            isp="New ISP"
+        )
+        self.assertEqual(speed_test.site, self.site_a)
+
+    def test_search_only_returns_logged_in_users_records(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.get(
+            reverse("core:speedtest_search"),
+            {"q": "ISP"},
+        )
+
+        self.assertContains(response, "User A ISP")
+        self.assertNotContains(response, "User B ISP")
+
+    def test_report_only_returns_logged_in_users_records(self):
+        self.client.login(
+            username="user_a",
+            password="testpass123",
+        )
+
+        response = self.client.get(
+            reverse("core:speedtest_report")
+        )
+
+        self.assertContains(response, "User A ISP")
+        self.assertNotContains(response, "User B ISP")

@@ -35,6 +35,18 @@ class SiteFormUserMixin:
         kwargs["user"] = self.request.user
         return kwargs
 
+class SpeedTestOwnerQuerysetMixin:
+    def get_queryset(self):
+        return SpeedTestResult.objects.filter(
+            site__customer__owner=self.request.user
+        )
+
+class SpeedTestFormUserMixin:
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
 class CustomerListView(
     LoginRequiredMixin,
     CustomerOwnerQuerysetMixin,
@@ -165,19 +177,31 @@ class SiteDeleteView(
         messages.success(self.request, "Site deleted successfully.")
         return super().form_valid(form)
 
-class SpeedTestResultListView(LoginRequiredMixin, ListView):
+class SpeedTestResultListView(
+    LoginRequiredMixin,
+    SpeedTestOwnerQuerysetMixin,
+    ListView,
+):
     model = SpeedTestResult
     template_name = "core/speedtest_list.html"
     context_object_name = "speed_tests"
 
 
-class SpeedTestResultDetailView(LoginRequiredMixin, DetailView):
+class SpeedTestResultDetailView(
+    LoginRequiredMixin,
+    SpeedTestOwnerQuerysetMixin,
+    DetailView,
+):
     model = SpeedTestResult
     template_name = "core/speedtest_detail.html"
     context_object_name = "speed_test"
 
 
-class SpeedTestResultCreateView(LoginRequiredMixin, CreateView):
+class SpeedTestResultCreateView(
+    LoginRequiredMixin,
+    SpeedTestFormUserMixin,
+    CreateView,
+):
     model = SpeedTestResult
     form_class = SpeedTestResultForm
     template_name = "core/speedtest_form.html"
@@ -188,7 +212,12 @@ class SpeedTestResultCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class SpeedTestResultUpdateView(LoginRequiredMixin, UpdateView):
+class SpeedTestResultUpdateView(
+    LoginRequiredMixin,
+    SpeedTestOwnerQuerysetMixin,
+    SpeedTestFormUserMixin,
+    UpdateView,
+):
     model = SpeedTestResult
     form_class = SpeedTestResultForm
     template_name = "core/speedtest_form.html"
@@ -199,7 +228,11 @@ class SpeedTestResultUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-class SpeedTestResultDeleteView(LoginRequiredMixin, DeleteView):
+class SpeedTestResultDeleteView(
+    LoginRequiredMixin,
+    SpeedTestOwnerQuerysetMixin,
+    DeleteView,
+):
     model = SpeedTestResult
     template_name = "core/speedtest_confirm_delete.html"
     success_url = reverse_lazy("core:speedtest_list")
@@ -214,7 +247,12 @@ class SpeedTestSearchView(LoginRequiredMixin, ListView):
     context_object_name = "speed_tests"
 
     def get_queryset(self):
-        queryset = SpeedTestResult.objects.select_related("site", "site__customer")
+        queryset = SpeedTestResult.objects.filter(
+            site__customer__owner=self.request.user
+        ).select_related(
+            "site",
+            "site__customer",
+        )
 
         query = self.request.GET.get("q", "").strip()
 
@@ -240,7 +278,12 @@ class SpeedTestReportView(LoginRequiredMixin, ListView):
     context_object_name = "speed_tests"
 
     def get_queryset(self):
-        queryset = SpeedTestResult.objects.select_related("site", "site__customer")
+        queryset = SpeedTestResult.objects.filter(
+            site__customer__owner=self.request.user
+        ).select_related(
+            "site",
+            "site__customer",
+        )
 
         customer = self.request.GET.get("customer", "").strip()
         site = self.request.GET.get("site", "").strip()

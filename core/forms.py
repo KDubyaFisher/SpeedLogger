@@ -94,11 +94,20 @@ class SpeedTestResultForm(forms.ModelForm):
             "notes": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
 
+        if user is not None:
+            self.fields["site"].queryset = Site.objects.filter(
+                customer__owner=user
+            )
+
         if self.instance and self.instance.test_datetime:
-            self.initial["test_datetime"] = self.instance.test_datetime.strftime("%Y-%m-%dT%H:%M")
+            self.initial["test_datetime"] = (
+                self.instance.test_datetime.strftime(
+                    "%Y-%m-%dT%H:%M"
+                )
+            )
 
     def clean(self):
         cleaned_data = super().clean()

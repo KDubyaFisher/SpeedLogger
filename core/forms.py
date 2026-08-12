@@ -51,6 +51,14 @@ class SiteForm(forms.ModelForm):
             "notes": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
         }
 
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if user is not None:
+            self.fields["customer"].queryset = Customer.objects.filter(
+                owner=user
+            )
+
         def clean_name(self):
             name = self.cleaned_data["name"].strip()
 
